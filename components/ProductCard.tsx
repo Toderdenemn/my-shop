@@ -13,9 +13,14 @@ export default function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
   const { user, signInWithGoogle } = useAuth();
 
-  const discountedPrice = calcDiscountedPrice(product.basePrice, product.discountPercent);
+  const variantPrices = product.variants.flatMap((v) => Object.values(v.prices || {}));
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : product.basePrice;
+  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : product.basePrice;
+  const hasPriceRange = minPrice !== maxPrice;
+
+  const discountedPrice = calcDiscountedPrice(minPrice, product.discountPercent);
   const hasDiscount = product.discountPercent > 0;
-  const savings = product.basePrice - discountedPrice;
+  const savings = minPrice - discountedPrice;
   const isOutOfStock = product.stock === 0;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -78,12 +83,16 @@ export default function ProductCard({ product }: { product: Product }) {
             <div>
               {hasDiscount ? (
                 <>
-                  <p className="text-red-500 font-bold text-base leading-tight">{formatPrice(discountedPrice)}</p>
-                  <p className="text-gray-400 text-xs line-through">{formatPrice(product.basePrice)}</p>
+                  <p className="text-red-500 font-bold text-base leading-tight">
+                    {formatPrice(discountedPrice)}{hasPriceRange && <span className="text-xs font-normal">~</span>}
+                  </p>
+                  <p className="text-gray-400 text-xs line-through">{formatPrice(minPrice)}</p>
                   <p className="text-green-600 text-xs font-medium">{formatPrice(savings)} хэмнэлт</p>
                 </>
               ) : (
-                <p className="text-gray-900 font-bold text-base">{formatPrice(product.basePrice)}</p>
+                <p className="text-gray-900 font-bold text-base">
+                  {hasPriceRange ? `${formatPrice(minPrice)} ~` : formatPrice(minPrice)}
+                </p>
               )}
             </div>
 

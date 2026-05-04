@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Product } from "@/types";
@@ -65,9 +65,17 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
     );
   }
 
-  const discountedPrice = calcDiscountedPrice(product.basePrice, product.discountPercent);
+  const effectiveBasePrice = useMemo(() => {
+    for (const variant of product.variants) {
+      const selected = selectedVariants[variant.name];
+      if (selected && variant.prices?.[selected]) return variant.prices[selected];
+    }
+    return product.basePrice;
+  }, [product, selectedVariants]);
+
+  const discountedPrice = calcDiscountedPrice(effectiveBasePrice, product.discountPercent);
   const hasDiscount = product.discountPercent > 0;
-  const savings = product.basePrice - discountedPrice;
+  const savings = effectiveBasePrice - discountedPrice;
   const totalPrice = discountedPrice * quantity;
 
   const handleAddToCart = async () => {
@@ -81,7 +89,7 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
       productImage: product.images[0] || "",
       quantity,
       selectedVariants,
-      basePrice: product.basePrice,
+      basePrice: effectiveBasePrice,
       discountPercent: product.discountPercent,
     });
     toast("Сагсанд нэмэгдлээ!");
@@ -98,7 +106,7 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
       productImage: product.images[0] || "",
       quantity,
       selectedVariants,
-      basePrice: product.basePrice,
+      basePrice: effectiveBasePrice,
       discountPercent: product.discountPercent,
     });
     router.push("/cart");

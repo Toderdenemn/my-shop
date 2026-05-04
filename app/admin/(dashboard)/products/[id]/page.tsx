@@ -101,7 +101,24 @@ export default function ProductFormPage({ params }: PageProps<"/admin/products/[
   };
 
   const removeVariantOption = (vi: number, opt: string) => {
-    updateVariant(vi, "options", form.variants[vi].options.filter((o) => o !== opt));
+    setForm((prev) => {
+      const v = [...prev.variants];
+      const prices = { ...(v[vi].prices || {}) };
+      delete prices[opt];
+      v[vi] = { ...v[vi], options: v[vi].options.filter((o) => o !== opt), prices: Object.keys(prices).length > 0 ? prices : undefined };
+      return { ...prev, variants: v };
+    });
+  };
+
+  const updateVariantPrice = (vi: number, opt: string, value: string) => {
+    setForm((prev) => {
+      const v = [...prev.variants];
+      const prices = { ...(v[vi].prices || {}) };
+      if (value) prices[opt] = Number(value);
+      else delete prices[opt];
+      v[vi] = { ...v[vi], prices: Object.keys(prices).length > 0 ? prices : undefined };
+      return { ...prev, variants: v };
+    });
   };
 
   const handleSave = async () => {
@@ -236,16 +253,29 @@ export default function ProductFormPage({ params }: PageProps<"/admin/products/[
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {variant.options.map((opt) => (
-                  <span key={opt} className="flex items-center gap-1 bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
-                    {opt}
-                    <button onClick={() => removeVariantOption(vi, opt)} className="text-gray-400 hover:text-red-500">
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
+              {variant.options.length > 0 && (
+                <div className="border rounded-lg overflow-hidden">
+                  <div className="grid grid-cols-[1fr_120px_32px] text-xs text-gray-400 px-3 py-1.5 bg-gray-50 border-b">
+                    <span>Сонголт</span><span>Үнэ (₮)</span><span />
+                  </div>
+                  {variant.options.map((opt) => (
+                    <div key={opt} className="grid grid-cols-[1fr_120px_32px] items-center px-3 py-2 border-b last:border-0 gap-2">
+                      <span className="text-sm text-gray-800">{opt}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder={String(form.basePrice || "үнэ")}
+                        value={variant.prices?.[opt] ?? ""}
+                        onChange={(e) => updateVariantPrice(vi, opt, e.target.value)}
+                        className="border rounded-lg px-2 py-1 text-sm outline-none focus:border-yellow-400 w-full"
+                      />
+                      <button onClick={() => removeVariantOption(vi, opt)} className="text-gray-300 hover:text-red-500 flex items-center justify-center">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex gap-2">
                 <input
                   type="text"

@@ -10,6 +10,7 @@ export interface Category {
 export interface ProductVariant {
   name: string;
   options: string[];
+  prices?: Record<string, number>;
 }
 
 export interface Product {
