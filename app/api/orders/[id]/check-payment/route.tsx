@@ -19,7 +19,7 @@ async function sendSms(total: number) {
     return;
   }
 
-  const text = `Shine zahialga uuslee ${total}t. Admin panel shalgana uu.`;
+  const text = `Захиралаа.. Hicar шинэ захиалга үүслээ.. захиалгаа шалгаарай`;
   const url = `${apiUrl}?from=${from}&to=${to}&text=${encodeURIComponent(text)}`;
 
   console.log("Sending SMS to:", to, "text:", text);
