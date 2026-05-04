@@ -173,7 +173,7 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
                     {formatPrice(discountedPrice)}
                   </span>
                   <span className="text-lg text-gray-400 line-through">
-                    {formatPrice(product.basePrice)}
+                    {formatPrice(effectiveBasePrice)}
                   </span>
                 </div>
                 <p className="text-green-600 text-sm mt-1">
@@ -182,7 +182,7 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
               </>
             ) : (
               <span className="text-3xl font-bold text-gray-900">
-                {formatPrice(product.basePrice)}
+                {formatPrice(effectiveBasePrice)}
               </span>
             )}
           </div>
