@@ -45,8 +45,6 @@ export default function HomePage() {
         where("isActive", "==", true),
       ];
 
-      if (onSale) constraints.push(where("discountPercent", ">", 0));
-
       if (categorySlug) {
         const cat = categories.find((c) => c.slug === categorySlug);
         if (cat) constraints.push(where("categoryId", "==", cat.id));
@@ -54,6 +52,8 @@ export default function HomePage() {
 
       const snap = await getDocs(query(productsRef, ...constraints));
       let results = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Product));
+
+      if (onSale) results = results.filter((p) => p.discountPercent > 0);
 
       if (q) {
         results = results.filter((p) =>
