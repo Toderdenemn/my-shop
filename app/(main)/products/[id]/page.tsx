@@ -23,6 +23,15 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
   const { user, signInWithGoogle } = useAuth();
   const router = useRouter();
 
+  const effectiveBasePrice = useMemo(() => {
+    if (!product) return 0;
+    for (const variant of product.variants) {
+      const selected = selectedVariants[variant.name];
+      if (selected && variant.prices?.[selected]) return variant.prices[selected];
+    }
+    return product.basePrice;
+  }, [product, selectedVariants]);
+
   useEffect(() => {
     params.then(({ id }) => {
       getDoc(doc(db, "products", id)).then((snap) => {
@@ -64,14 +73,6 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
       </div>
     );
   }
-
-  const effectiveBasePrice = useMemo(() => {
-    for (const variant of product.variants) {
-      const selected = selectedVariants[variant.name];
-      if (selected && variant.prices?.[selected]) return variant.prices[selected];
-    }
-    return product.basePrice;
-  }, [product, selectedVariants]);
 
   const discountedPrice = calcDiscountedPrice(effectiveBasePrice, product.discountPercent);
   const hasDiscount = product.discountPercent > 0;
