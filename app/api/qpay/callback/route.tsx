@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { checkQPayPayment } from "@/lib/qpay";
+import { sendAdminSms } from "@/lib/sms";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,6 +27,10 @@ export async function POST(request: NextRequest) {
         "payment.confirmedAt": new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
+
+      await sendAdminSms(
+        `Hipay "${order.orderNumber}" дугаартай захиалгийн ${order.total}₮ төлөгдлөө`
+      );
     }
 
     return Response.json({ success: true, paid: isPaid });
