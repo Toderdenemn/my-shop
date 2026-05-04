@@ -8,11 +8,12 @@ import { formatPrice } from "@/lib/utils";
 import { toast } from "@/components/Toast";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle, XCircle, Truck, Package } from "lucide-react";
+import { ChevronLeft, CheckCircle, XCircle, Truck, Package, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: "Хүлээгдэж байна", color: "text-yellow-700 bg-yellow-100" },
-  "payment-checking": { label: "Шалгалт хүлээж байна", color: "text-blue-700 bg-blue-100" },
+  pending: { label: "Төлбөр хүлээгдэж байна", color: "text-yellow-700 bg-yellow-100" },
+  "payment-checking": { label: "Төлбөрийг шалгаж байна", color: "text-blue-700 bg-blue-100" },
   paid: { label: "Төлбөр хийгдсэн", color: "text-green-700 bg-green-100" },
   processing: { label: "Бэлдэж байна", color: "text-purple-700 bg-purple-100" },
   shipped: { label: "Илгээгдсэн", color: "text-blue-700 bg-blue-100" },
@@ -25,6 +26,8 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
   const [loading, setLoading] = useState(true);
   const [actioning, setActioning] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     params.then(({ id }) => {
@@ -66,6 +69,22 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
     }
   };
 
+  const handleDelete = async () => {
+    if (!orderId || deleting) return;
+    if (!confirm(`"${order?.orderNumber}" захиалгыг устгах уу? Энэ үйлдлийг буцаах боломжгүй.`)) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      toast("Захиалга устгагдлаа");
+      router.push("/admin/orders");
+    } catch {
+      toast("Алдаа гарлаа", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const updateStatus = async (status: string) => {
     if (!orderId) return;
     await updateDoc(doc(db, "orders", orderId), { status, updatedAt: new Date().toISOString() });
@@ -81,9 +100,19 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/orders" className="flex items-center gap-1 text-gray-400 hover:text-gray-600 mb-5 text-sm">
-        <ChevronLeft className="w-4 h-4" /> Захиалгууд руу буцах
-      </Link>
+      <div className="flex items-center justify-between mb-5">
+        <Link href="/admin/orders" className="flex items-center gap-1 text-gray-400 hover:text-gray-600 text-sm">
+          <ChevronLeft className="w-4 h-4" /> Захиалгууд руу буцах
+        </Link>
+        <button
+          onClick={handleDelete}
+          disabled={deleting}
+          className="flex items-center gap-1.5 text-sm text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+        >
+          <Trash2 className="w-4 h-4" />
+          {deleting ? "Устгаж байна..." : "Устгах"}
+        </button>
+      </div>
 
       {/* Header */}
       <div className="bg-white rounded-xl border p-5 mb-4">

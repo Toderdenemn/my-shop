@@ -41,7 +41,7 @@ export default function CartPage() {
           href="/"
           className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-8 py-3 rounded-xl inline-block transition-colors"
         >
-          Дэлгүүрлэх
+          Дэлгүүр хэсэх
         </Link>
       </div>
     );

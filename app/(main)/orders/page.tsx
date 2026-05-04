@@ -63,7 +63,7 @@ export default function OrdersPage() {
         <Package className="w-20 h-20 text-gray-200 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-gray-700 mb-2">Захиалга байхгүй байна</h2>
         <Link href="/" className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold px-6 py-3 rounded-xl inline-block transition-colors mt-4">
-          Дэлгүүрлэх
+          Дэлгүүр хэсэх
         </Link>
       </div>
     );
@@ -73,7 +73,7 @@ export default function OrdersPage() {
     <div className="max-w-2xl mx-auto px-4 py-6">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Миний захиалгууд</h1>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {orders.map((order) => {
           const status = STATUS_LABELS[order.status] || { label: order.status, color: "text-gray-600 bg-gray-50" };
           return (

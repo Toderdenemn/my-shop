@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  CheckCircle, XCircle, Clock, Package, Truck, CreditCard, Copy, RefreshCw, QrCode, ChevronLeft,
+  CheckCircle, XCircle, Clock, Package, Truck, CreditCard, Copy, RefreshCw, QrCode, ChevronLeft, ArrowLeftRight,
 } from "lucide-react";
 import { toast } from "@/components/Toast";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,8 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [switchingPayment, setSwitchingPayment] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [countdownActive, setCountdownActive] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -93,11 +95,48 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
       });
       if (!res.ok) throw new Error("Failed");
       startCountdown();
-      toast("Админд мэдэгдэл илгээгдлээ. Шалгаж байна...");
+      toast("Шалгаж байна, удахгүй хариу ирнэ.");
     } catch {
       toast("Алдаа гарлаа. Дахин оролдоно уу.", "error");
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!order || !user || cancelling) return;
+    if (!confirm("Захиалгыг цуцлах уу?")) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.uid }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast("Захиалга цуцлагдлаа.");
+    } catch {
+      toast("Алдаа гарлаа. Дахин оролдоно уу.", "error");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleSwitchPayment = async (newMethod: "qpay" | "bank-transfer") => {
+    if (!order || !user || switchingPayment) return;
+    setSwitchingPayment(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/switch-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method: newMethod, userId: user.uid }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      toast("Төлбөрийн арга солигдлоо!");
+    } catch {
+      toast("Алдаа гарлаа. Дахин оролдоно уу.", "error");
+    } finally {
+      setSwitchingPayment(false);
     }
   };
 
@@ -129,7 +168,8 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
   const statusInfo = STATUS_LABELS[order.status] || STATUS_LABELS.pending;
   const isPaid = order.status === "paid" || order.status === "processing" || order.status === "shipped" || order.status === "delivered";
   const isFailed = order.payment.status === "failed" || (order.status === "cancelled");
-  const canCheckPayment = order.status === "pending" && !countdownActive;
+  const canCheckPayment = (order.status === "pending" || order.status === "cancelled") && !countdownActive;
+  const canSwitch = order.status === "pending" || order.status === "cancelled";
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6">
@@ -179,6 +219,26 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
             </>
           ) : (
             <div className="text-center py-8 text-gray-400">QR код ачааллаж байна...</div>
+          )}
+
+          {canSwitch && (
+            <div className="mt-4 flex flex-col gap-2">
+              <button
+                onClick={() => handleSwitchPayment("bank-transfer")}
+                disabled={switchingPayment}
+                className="w-full border border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-800 font-medium py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                {switchingPayment ? "Солж байна..." : "Дансаар төлөх"}
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="w-full border border-red-200 hover:border-red-300 text-red-400 hover:text-red-600 font-medium py-2.5 rounded-xl text-sm transition-colors"
+              >
+                {cancelling ? "Цуцалж байна..." : "Захиалга цуцлах"}
+              </button>
+            </div>
           )}
         </div>
       )}
@@ -245,6 +305,26 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
             >
               {checking ? <><RefreshCw className="w-4 h-4 animate-spin" /> Шалгаж байна...</> : "Төлбөр шалгах"}
             </button>
+          )}
+
+          {canSwitch && (
+            <div className="mt-3 flex flex-col gap-2">
+              <button
+                onClick={() => handleSwitchPayment("qpay")}
+                disabled={switchingPayment}
+                className="w-full border border-gray-300 hover:border-gray-400 text-gray-600 hover:text-gray-800 font-medium py-2.5 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                {switchingPayment ? "Солж байна..." : "QPay-ээр төлөх"}
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="w-full border border-red-200 hover:border-red-300 text-red-400 hover:text-red-600 font-medium py-2.5 rounded-xl text-sm transition-colors"
+              >
+                {cancelling ? "Цуцалж байна..." : "Захиалга цуцлах"}
+              </button>
+            </div>
           )}
         </div>
       )}

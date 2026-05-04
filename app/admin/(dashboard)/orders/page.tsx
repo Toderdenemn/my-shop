@@ -7,8 +7,8 @@ import Link from "next/link";
 import { ChevronRight, Search } from "lucide-react";
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  pending: { label: "Хүлээгдэж байна", color: "text-yellow-700 bg-yellow-100" },
-  "payment-checking": { label: "Шалгаж байна", color: "text-blue-700 bg-blue-100" },
+  pending: { label: "Төлбөр хүлээгдэж байна", color: "text-yellow-700 bg-yellow-100" },
+  "payment-checking": { label: "Төлбөрийг шалгаж байна", color: "text-blue-700 bg-blue-100" },
   paid: { label: "Төлбөр хийгдсэн", color: "text-green-700 bg-green-100" },
   processing: { label: "Бэлдэж байна", color: "text-purple-700 bg-purple-100" },
   shipped: { label: "Илгээгдсэн", color: "text-blue-700 bg-blue-100" },
