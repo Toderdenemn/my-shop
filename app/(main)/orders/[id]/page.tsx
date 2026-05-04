@@ -32,6 +32,7 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
+  const [checkingQpay, setCheckingQpay] = useState(false);
   const [switchingPayment, setSwitchingPayment] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [countdown, setCountdown] = useState(0);
@@ -100,6 +101,28 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
       toast("Алдаа гарлаа. Дахин оролдоно уу.", "error");
     } finally {
       setChecking(false);
+    }
+  };
+
+  const handleCheckQpay = async () => {
+    if (!order || !user || checkingQpay) return;
+    setCheckingQpay(true);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/check-qpay`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.uid }),
+      });
+      const data = await res.json();
+      if (data.paid) {
+        toast("Төлбөр баталгаажлаа!");
+      } else {
+        toast("Төлбөр бүртгэгдээгүй байна. Дахин оролдоно уу.", "error");
+      }
+    } catch {
+      toast("Алдаа гарлаа. Дахин оролдоно уу.", "error");
+    } finally {
+      setCheckingQpay(false);
     }
   };
 
@@ -223,6 +246,13 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
 
           {canSwitch && (
             <div className="mt-4 flex flex-col gap-2">
+              <button
+                onClick={handleCheckQpay}
+                disabled={checkingQpay}
+                className="w-full bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-200 text-gray-900 font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {checkingQpay ? <><RefreshCw className="w-4 h-4 animate-spin" /> Шалгаж байна...</> : "Төлбөр шалгах"}
+              </button>
               <button
                 onClick={() => handleSwitchPayment("bank-transfer")}
                 disabled={switchingPayment}
