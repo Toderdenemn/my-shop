@@ -21,9 +21,7 @@ export default function ProductCard({ product }: { product: Product }) {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!user) {
-      if (confirm("Сагсанд нэмэхийн тулд нэвтрэх шаардлагатай. Google-ээр нэвтрэх үү?")) {
-        await signInWithGoogle();
-      }
+      await signInWithGoogle();
       return;
     }
     addItem({
@@ -92,7 +90,7 @@ export default function ProductCard({ product }: { product: Product }) {
             <button
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className="flex-shrink-0 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-100 disabled:text-gray-400 text-gray-900 p-2 rounded-lg transition-colors"
+              className="shrink-0 bg-yellow-400 hover:bg-yellow-500 disabled:bg-gray-100 disabled:text-gray-400 text-gray-900 p-2 rounded-lg transition-colors"
               title="Сагсанд нэмэх"
             >
               <ShoppingCart className="w-4 h-4" />

@@ -35,6 +35,7 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
   const [checkingQpay, setCheckingQpay] = useState(false);
   const [switchingPayment, setSwitchingPayment] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [countdownActive, setCountdownActive] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -128,8 +129,8 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
 
   const handleCancel = async () => {
     if (!order || !user || cancelling) return;
-    if (!confirm("Захиалгыг цуцлах уу?")) return;
     setCancelling(true);
+    setConfirmingCancel(false);
     try {
       const res = await fetch(`/api/orders/${order.id}/cancel`, {
         method: "POST",
@@ -204,7 +205,7 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
       <div className="bg-white rounded-xl border p-5 mb-4">
         <div className="flex items-start justify-between gap-2 mb-1 flex-wrap">
           <h1 className="font-bold text-lg text-gray-900">{order.orderNumber}</h1>
-          <div className={`flex items-center gap-1.5 font-medium text-sm ${statusInfo.color} flex-shrink-0`}>
+          <div className={`flex items-center gap-1.5 font-medium text-sm ${statusInfo.color} shrink-0`}>
             {statusInfo.icon}
             <span>{statusInfo.label}</span>
           </div>
@@ -261,13 +262,23 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
                 <ArrowLeftRight className="w-4 h-4" />
                 {switchingPayment ? "Солж байна..." : "Дансаар төлөх"}
               </button>
-              <button
-                onClick={handleCancel}
-                disabled={cancelling}
-                className="w-full border border-red-200 hover:border-red-300 text-red-400 hover:text-red-600 font-medium py-2.5 rounded-xl text-sm transition-colors"
-              >
-                {cancelling ? "Цуцалж байна..." : "Захиалга цуцлах"}
-              </button>
+              {confirmingCancel ? (
+                <div className="flex items-center gap-2 border border-red-200 rounded-xl px-4 py-2.5">
+                  <span className="text-sm text-red-500 flex-1">Захиалгыг цуцлах уу?</span>
+                  <button onClick={handleCancel} disabled={cancelling} className="text-sm font-bold text-red-500 hover:text-red-700">
+                    {cancelling ? "..." : "Тийм"}
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button onClick={() => setConfirmingCancel(false)} className="text-sm text-gray-400 hover:text-gray-600">Болих</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmingCancel(true)}
+                  className="w-full border border-red-200 hover:border-red-300 text-red-400 hover:text-red-600 font-medium py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  Захиалга цуцлах
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -289,10 +300,10 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
               { label: "Гүйлгээний утга", value: order.orderNumber, copy: order.orderNumber, bold: true },
             ].map(({ label, value, copy, bold }) => (
               <div key={label} className="flex items-center justify-between gap-2">
-                <span className="text-blue-600 flex-shrink-0">{label}</span>
+                <span className="text-blue-600 shrink-0">{label}</span>
                 <div className="flex items-center gap-1 min-w-0">
                   <span className={`text-right break-all ${bold ? "font-bold text-blue-900" : "font-medium text-blue-900"}`}>{value}</span>
-                  <button onClick={() => copyToClipboard(copy)} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
+                  <button onClick={() => copyToClipboard(copy)} className="text-blue-400 hover:text-blue-600 shrink-0">
                     <Copy className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -347,13 +358,23 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
                 <ArrowLeftRight className="w-4 h-4" />
                 {switchingPayment ? "Солж байна..." : "QPay-ээр төлөх"}
               </button>
-              <button
-                onClick={handleCancel}
-                disabled={cancelling}
-                className="w-full border border-red-200 hover:border-red-300 text-red-400 hover:text-red-600 font-medium py-2.5 rounded-xl text-sm transition-colors"
-              >
-                {cancelling ? "Цуцалж байна..." : "Захиалга цуцлах"}
-              </button>
+              {confirmingCancel ? (
+                <div className="flex items-center gap-2 border border-red-200 rounded-xl px-4 py-2.5">
+                  <span className="text-sm text-red-500 flex-1">Захиалгыг цуцлах уу?</span>
+                  <button onClick={handleCancel} disabled={cancelling} className="text-sm font-bold text-red-500 hover:text-red-700">
+                    {cancelling ? "..." : "Тийм"}
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button onClick={() => setConfirmingCancel(false)} className="text-sm text-gray-400 hover:text-gray-600">Болих</button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmingCancel(true)}
+                  className="w-full border border-red-200 hover:border-red-300 text-red-400 hover:text-red-600 font-medium py-2.5 rounded-xl text-sm transition-colors"
+                >
+                  Захиалга цуцлах
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -374,7 +395,7 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
         <div className="space-y-3">
           {order.items.map((item, i) => (
             <div key={i} className="flex gap-3">
-              <div className="relative w-14 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+              <div className="relative w-14 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                 {item.productImage && <Image src={item.productImage} alt={item.productName} fill className="object-cover" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -383,7 +404,7 @@ export default function OrderDetailPage({ params }: PageProps<"/orders/[id]">) {
                   <p className="text-xs text-gray-400">{Object.entries(item.selectedVariants).map(([k, v]) => `${k}: ${v}`).join(", ")}</p>
                 )}
               </div>
-              <div className="text-right flex-shrink-0">
+              <div className="text-right shrink-0">
                 <p className="text-sm font-bold">{formatPrice(item.finalPrice)}</p>
                 <p className="text-xs text-gray-400">×{item.quantity}</p>
               </div>

@@ -22,11 +22,21 @@ export default function AdminProductsPage() {
 
   useEffect(() => { fetchProducts(); }, []);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`"${name}" барааг устгах уу?`)) return;
-    await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+  const handleDelete = (id: string, name: string) => {
+    const deleted = products.find((p) => p.id === id)!;
     setProducts((prev) => prev.filter((p) => p.id !== id));
-    toast("Бараа устгагдлаа!");
+    let undone = false;
+    const timer = setTimeout(() => {
+      if (!undone) fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    }, 4000);
+    toast(`"${name}" устгагдлаа`, "success", {
+      label: "Буцаах",
+      onClick: () => {
+        undone = true;
+        clearTimeout(timer);
+        setProducts((prev) => [...prev, deleted]);
+      },
+    });
   };
 
   const handleToggleActive = async (product: Product) => {

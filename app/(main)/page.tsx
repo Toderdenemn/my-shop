@@ -38,6 +38,7 @@ export default function HomePage() {
   }, []);
 
   const fetchProducts = useCallback(async () => {
+    if (categorySlug && categories.length === 0) return;
     setLoading(true);
     try {
       const productsRef = collection(db, "products");
@@ -66,6 +67,12 @@ export default function HomePage() {
 
       if (sortBy === "price-asc") results.sort((a, b) => a.basePrice - b.basePrice);
       else if (sortBy === "price-desc") results.sort((a, b) => b.basePrice - a.basePrice);
+      else if (sortBy === "category") {
+        const nameOf = (p: Product) =>
+          p.categoryName ?? categories.find((c) => c.id === p.categoryId)?.name ?? "";
+        results.sort((a, b) => nameOf(a).localeCompare(nameOf(b), "mn"));
+      }
+      else if (sortBy === "discount") results.sort((a, b) => b.discountPercent - a.discountPercent);
       else results.sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1));
 
       setProducts(results);
@@ -95,7 +102,7 @@ export default function HomePage() {
             <img src="/logo.png" alt="HiCar" className="h-[88px] sm:h-[110px] w-auto" />
           </div>
           <p className="text-gray-300 text-sm sm:text-lg drop-shadow">
-            Автомашины стикер болон чимэглэлийн шилдэг сонголт
+            Stickers bring fun!
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
             <a href="/?category=sticker" className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold hover:bg-yellow-300 transition-colors text-sm">
@@ -114,7 +121,7 @@ export default function HomePage() {
         <a
           href="/"
           className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
-            !categorySlug && !onSale ? "bg-gray-900 text-white" : "bg-white text-gray-700 border hover:bg-gray-50"
+            !categorySlug && !onSale && !q ? "bg-gray-900 text-white" : "bg-white text-gray-700 border hover:bg-gray-50"
           }`}
         >
           Бүх бараа
@@ -152,7 +159,7 @@ export default function HomePage() {
             className="flex items-center gap-1.5 px-2.5 py-2 border rounded-lg text-sm hover:bg-gray-50 whitespace-nowrap"
           >
             <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden xs:inline">Шүүлтүүр</span>
+            <span className="hidden sm:inline">Шүүлтүүр</span>
           </button>
           <select
             value={sortBy}
@@ -160,8 +167,10 @@ export default function HomePage() {
             className="px-2.5 py-2 border rounded-lg text-sm outline-none max-w-[150px]"
           >
             <option value="newest">Шинэ эхэндээ</option>
-            <option value="price-asc">Үнэ: бага → их</option>
             <option value="price-desc">Үнэ: их → бага</option>
+            <option value="price-asc">Үнэ: бага → их</option>
+            <option value="category">Ангилалаар</option>
+            <option value="discount">Хямдралын хувиар</option>
           </select>
         </div>
       </div>

@@ -72,9 +72,7 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
 
   const handleAddToCart = async () => {
     if (!user) {
-      if (confirm("Сагсанд нэмэхийн тулд нэвтрэх шаардлагатай. Google-ээр нэвтрэх үү?")) {
-        await signInWithGoogle();
-      }
+      await signInWithGoogle();
       return;
     }
     addItem({
@@ -91,9 +89,7 @@ export default function ProductPage({ params }: PageProps<"/products/[id]">) {
 
   const handleBuyNow = async () => {
     if (!user) {
-      if (confirm("Худалдаж авахын тулд нэвтрэх шаардлагатай. Google-ээр нэвтрэх үү?")) {
-        await signInWithGoogle();
-      }
+      await signInWithGoogle();
       return;
     }
     addItem({

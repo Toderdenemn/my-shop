@@ -58,11 +58,21 @@ export default function AdminCategoriesPage() {
     toast("Өөрчлөлт хадгалагдлаа!");
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`"${name}" ангилалыг устгах уу?`)) return;
-    await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+  const handleDelete = (id: string, name: string) => {
+    const deleted = categories.find((c) => c.id === id)!;
     setCategories((prev) => prev.filter((c) => c.id !== id));
-    toast("Ангилал устгагдлаа!");
+    let undone = false;
+    const timer = setTimeout(() => {
+      if (!undone) fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+    }, 4000);
+    toast(`"${name}" устгагдлаа`, "success", {
+      label: "Буцаах",
+      onClick: () => {
+        undone = true;
+        clearTimeout(timer);
+        setCategories((prev) => [...prev, deleted]);
+      },
+    });
   };
 
   const handleToggle = async (cat: Category) => {

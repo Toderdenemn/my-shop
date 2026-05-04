@@ -8,8 +8,8 @@ import { ToastContainer } from "@/components/Toast";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AutoSticker - Автомашины стикер, чимэглэл",
-  description: "Монголын шилдэг автомашины стикер болон чимэглэлийн онлайн дэлгүүр",
+  title: "Hicar.mn",
+  description: "Стикер болон чимэглэлийн онлайн дэлгүүр",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

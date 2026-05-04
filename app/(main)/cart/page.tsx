@@ -8,6 +8,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ChevronRight } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { calcDiscountedPrice, formatPrice, calcCartTotals } from "@/lib/utils";
+import { toast } from "@/components/Toast";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, toggleSelect, selectAll, selectedItems, clearSelected } = useCart();
@@ -19,13 +20,11 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (!user) {
-      if (confirm("Захиалга хийхийн тулд нэвтрэх шаардлагатай. Google-ээр нэвтрэх үү?")) {
-        await signInWithGoogle();
-      }
+      await signInWithGoogle();
       return;
     }
     if (selectedItems.length === 0) {
-      alert("Худалдаж авах барааг сонгоно уу.");
+      toast("Худалдаж авах барааг сонгоно уу.", "error");
       return;
     }
     router.push("/checkout");

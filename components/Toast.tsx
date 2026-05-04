@@ -1,20 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { CheckCircle, XCircle, X } from "lucide-react";
+
+interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
 
 interface ToastProps {
   message: string;
   type?: "success" | "error";
+  action?: ToastAction;
   onClose: () => void;
 }
 
-function ToastItem({ message, type = "success", onClose }: ToastProps) {
+function ToastItem({ message, type = "success", action, onClose }: ToastProps) {
   useEffect(() => {
-    const t = setTimeout(onClose, 3000);
+    const t = setTimeout(onClose, action ? 4000 : 3000);
     return () => clearTimeout(t);
-  }, [onClose]);
+  }, [onClose, action]);
 
   return (
     <div
@@ -22,8 +28,16 @@ function ToastItem({ message, type = "success", onClose }: ToastProps) {
         type === "success" ? "bg-green-600" : "bg-red-600"
       }`}
     >
-      {type === "success" ? <CheckCircle className="w-5 h-5 flex-shrink-0" /> : <XCircle className="w-5 h-5 flex-shrink-0" />}
+      {type === "success" ? <CheckCircle className="w-5 h-5 shrink-0" /> : <XCircle className="w-5 h-5 shrink-0" />}
       <span className="flex-1">{message}</span>
+      {action && (
+        <button
+          onClick={() => { action.onClick(); onClose(); }}
+          className="underline font-bold opacity-90 hover:opacity-100 shrink-0"
+        >
+          {action.label}
+        </button>
+      )}
       <button onClick={onClose} className="opacity-80 hover:opacity-100">
         <X className="w-4 h-4" />
       </button>
@@ -33,11 +47,11 @@ function ToastItem({ message, type = "success", onClose }: ToastProps) {
 
 export function ToastContainer() {
   return (
-    <div id="toast-container" className="fixed top-4 right-4 z-[9999] flex flex-col gap-2" />
+    <div id="toast-container" className="fixed top-4 right-4 z-9999 flex flex-col gap-2" />
   );
 }
 
-export function toast(message: string, type: "success" | "error" = "success") {
+export function toast(message: string, type: "success" | "error" = "success", action?: ToastAction) {
   const container = document.getElementById("toast-container");
   if (!container) return;
 
@@ -50,5 +64,5 @@ export function toast(message: string, type: "success" | "error" = "success") {
     wrapper.remove();
   };
 
-  root.render(<ToastItem message={message} type={type} onClose={remove} />);
+  root.render(<ToastItem message={message} type={type} action={action} onClose={remove} />);
 }
