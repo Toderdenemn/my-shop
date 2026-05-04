@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { doc, onSnapshot, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useEffect, useState, useRef } from "react";
 import { Order } from "@/types";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "@/components/Toast";
@@ -25,19 +23,27 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [actioning, setActioning] = useState(false);
-  const [orderId, setOrderId] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [orderId, setOrderId] = useState("");
   const router = useRouter();
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchOrder = async (id: string) => {
+    const res = await fetch(`/api/admin/orders/${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      setOrder(data as Order);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     params.then(({ id }) => {
       setOrderId(id);
-      const unsub = onSnapshot(doc(db, "orders", id), (snap) => {
-        if (snap.exists()) setOrder({ id: snap.id, ...snap.data() } as Order);
-        setLoading(false);
-      });
-      return unsub;
+      fetchOrder(id);
+      pollRef.current = setInterval(() => fetchOrder(id), 5000);
     });
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [params]);
 
   const handleConfirm = async () => {
@@ -47,6 +53,7 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
       const res = await fetch(`/api/orders/${orderId}/confirm`, { method: "POST" });
       if (!res.ok) throw new Error();
       toast("Төлбөр баталгаажууллаа!");
+      fetchOrder(orderId);
     } catch {
       toast("Алдаа гарлаа", "error");
     } finally {
@@ -62,11 +69,23 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
       const res = await fetch(`/api/orders/${orderId}/reject`, { method: "POST" });
       if (!res.ok) throw new Error();
       toast("Төлбөр ороогүй гэж тэмдэглэгдлээ");
+      fetchOrder(orderId);
     } catch {
       toast("Алдаа гарлаа", "error");
     } finally {
       setActioning(false);
     }
+  };
+
+  const updateStatus = async (status: string) => {
+    if (!orderId) return;
+    await fetch(`/api/admin/orders/${orderId}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    });
+    toast("Статус шинэчлэгдлээ!");
+    fetchOrder(orderId);
   };
 
   const handleDelete = async () => {
@@ -83,12 +102,6 @@ export default function AdminOrderDetailPage({ params }: PageProps<"/admin/order
     } finally {
       setDeleting(false);
     }
-  };
-
-  const updateStatus = async (status: string) => {
-    if (!orderId) return;
-    await updateDoc(doc(db, "orders", orderId), { status, updatedAt: new Date().toISOString() });
-    toast("Статус шинэчлэгдлээ!");
   };
 
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-8 bg-gray-200 rounded w-1/3" /><div className="h-40 bg-gray-200 rounded-xl" /></div>;

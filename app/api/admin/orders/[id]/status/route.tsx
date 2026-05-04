@@ -9,25 +9,19 @@ async function auth() {
   return token && (await verifyAdminToken(token));
 }
 
-export async function GET(
-  _request: NextRequest,
+export async function POST(
+  request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
   if (!(await auth())) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await ctx.params;
-  const snap = await adminDb.doc(`orders/${id}`).get();
-  if (!snap.exists) return Response.json({ error: "Not found" }, { status: 404 });
-  return Response.json({ id: snap.id, ...snap.data() });
-}
+  const { status } = await request.json();
 
-export async function DELETE(
-  _request: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
-) {
-  if (!(await auth())) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  await adminDb.doc(`orders/${id}`).update({
+    status,
+    updatedAt: new Date().toISOString(),
+  });
 
-  const { id } = await ctx.params;
-  await adminDb.doc(`orders/${id}`).delete();
   return Response.json({ success: true });
 }
